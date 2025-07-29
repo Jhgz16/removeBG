@@ -10,23 +10,26 @@
     <script src="https://cdn.jsdelivr.net/npm/babel-standalone@7.24.7/babel.min.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/heic2any@0.0.4/dist/heic2any.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.0.1/dist/transformers.min.js"></script>
 </head>
 <body>
     <div id="root" class="min-h-screen bg-gray-100 flex items-center justify-center"></div>
     <script type="module">
         import React from 'https://cdn.jsdelivr.net/npm/react@18.2.0/umd/react.production.min.js';
         import ReactDOM from 'https://cdn.jsdelivr.net/npm/react-dom@18.2.0/umd/react-dom.production.min.js';
+        import * as transformers from 'https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.0.1/dist/transformers.min.js';
 
         // Service Worker for offline caching
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('/sw.js').then(reg => {
+                navigator.serviceWorker.register('./sw.js').then(reg => {
                     console.log('Service Worker registered:', reg);
                 }).catch(err => {
                     console.error('Service Worker registration failed:', err);
+                    document.getElementById('root').innerHTML = '<p class="text-red-500 text-center">Service Worker failed to register: ' + err.message + '. Offline mode may be limited.</p>';
                 });
             });
+        } else {
+            console.warn('Service Worker not supported. Offline mode may be limited.');
         }
 
         function App() {
@@ -42,11 +45,8 @@
                 async function loadModel() {
                     try {
                         setLoading(true);
-                        console.log('Loading Transformers.js and BRIA-RMBG-v1.4 model...');
-                        if (!window.transformers) {
-                            throw new Error('Transformers.js failed to load. Check CDN or browser compatibility.');
-                        }
-                        const pipeline = await window.transformers.pipeline(
+                        console.log('Loading BRIA-RMBG-v1.4 model...');
+                        const pipeline = await transformers.pipeline(
                             'image-segmentation',
                             'briaai/RMBG-1.4',
                             { cache: 'force-cache', device: window.navigator.gpu ? 'webgpu' : 'wasm' }
@@ -284,37 +284,6 @@
             console.error('ReactDOM render error:', err);
             document.getElementById('root').innerHTML = '<p class="text-red-500 text-center">Error initializing application: ' + err.message + '</p>';
         }
-    </script>
-    <script>
-        // Service Worker for offline caching
-        const CACHE_NAME = 'bg-remover-cache-v1';
-        const urlsToCache = [
-            '/',
-            '/index.html',
-            'https://cdn.jsdelivr.net/npm/react@18.2.0/umd/react.production.min.js',
-            'https://cdn.jsdelivr.net/npm/react-dom@18.2.0/umd/react-dom.production.min.js',
-            'https://cdn.jsdelivr.net/npm/babel-standalone@7.24.7/babel.min.js',
-            'https://cdn.tailwindcss.com',
-            'https://cdn.jsdelivr.net/npm/heic2any@0.0.4/dist/heic2any.min.js',
-            'https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.0.1/dist/transformers.min.js'
-        ];
-
-        self.addEventListener('install', event => {
-            event.waitUntil(
-                caches.open(CACHE_NAME).then(cache => {
-                    console.log('Caching assets');
-                    return cache.addAll(urlsToCache);
-                })
-            );
-        });
-
-        self.addEventListener('fetch', event => {
-            event.respondWith(
-                caches.match(event.request).then(response => {
-                    return response || fetch(event.request);
-                })
-            );
-        });
     </script>
 </body>
 </html>
