@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://cdn.jsdelivr.net https://*.huggingface.co 'unsafe-inline'; style-src 'self' https://cdn.tailwindcss.com 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self' https://*.huggingface.co; worker-src 'self' blob:;">
     <title>Offline Image Background Remover</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><rect width='16' height='16' fill='none'/></svg>" type="image/svg+xml">
     <script src="https://cdn.jsdelivr.net/npm/react@18.2.0/umd/react.production.min.js"></script>
@@ -25,11 +26,12 @@
                     console.log('Service Worker registered:', reg);
                 }).catch(err => {
                     console.error('Service Worker registration failed:', err);
-                    document.getElementById('root').innerHTML = '<p class="text-red-500 text-center">Service Worker failed to register: ' + err.message + '. Offline mode may be limited.</p>';
+                    document.getElementById('root').innerHTML = '<p class="text-red-500 text-center">Service Worker failed to register: ' + err.message + '. Offline mode may be limited. Please ensure sw.js is in the repository root.</p>';
                 });
             });
         } else {
             console.warn('Service Worker not supported. Offline mode may be limited.');
+            document.getElementById('root').innerHTML = '<p class="text-red-500 text-center">Service Worker not supported. Offline mode may be limited.</p>';
         }
 
         function App() {
@@ -55,7 +57,7 @@
                         console.log('Model loaded successfully.');
                     } catch (err) {
                         console.error('Model loading error:', err);
-                        setError(`Failed to load AI model: ${err.message}. Please ensure WebGPU/WebAssembly support and try again.`);
+                        setError(`Failed to load AI model: ${err.message}. Please ensure WebGPU/WebAssembly support and try again. If the issue persists, check your browser console (F12).`);
                     } finally {
                         setLoading(false);
                     }
@@ -282,7 +284,7 @@
             ReactDOM.render(<App />, document.getElementById('root'));
         } catch (err) {
             console.error('ReactDOM render error:', err);
-            document.getElementById('root').innerHTML = '<p class="text-red-500 text-center">Error initializing application: ' + err.message + '</p>';
+            document.getElementById('root').innerHTML = '<p class="text-red-500 text-center">Error initializing application: ' + err.message + '. Check the console (F12) for details.</p>';
         }
     </script>
 </body>
