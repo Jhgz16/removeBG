@@ -7,7 +7,7 @@ if (!window.React || !window.ReactDOM || !window.transformersPipeline) {
     document.getElementById('root').innerHTML = `
         <div class="text-center text-red-500 p-4">
             <p>Error: Required libraries (React, ReactDOM, or Transformers.js) failed to load.</p>
-            <p>Please refresh the page or check the console (F12) for details.</p>
+            <p>Please clear your browser cache, refresh the page, or check the console (F12) for details.</p>
         </div>`;
 } else {
     function App() {
