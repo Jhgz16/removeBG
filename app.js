@@ -1,7 +1,3 @@
-import React from 'https://cdn.jsdelivr.net/npm/react@18.2.0/umd/react.production.min.js';
-import ReactDOM from 'https://cdn.jsdelivr.net/npm/react-dom@18.2.0/umd/react-dom.production.min.js';
-import * as transformers from 'https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.0.1/dist/transformers.min.js';
-
 function App() {
     const [images, setImages] = React.useState([]);
     const [resultImages, setResultImages] = React.useState([]);
