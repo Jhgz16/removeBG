@@ -3,41 +3,83 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://cdn.jsdelivr.net https://*.huggingface.co https://cdn.tailwindcss.com 'unsafe-inline' 'unsafe-eval'; style-src 'self' https://cdn.tailwindcss.com 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self' https://*.huggingface.co; worker-src 'self' blob:;">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://cdn.jsdelivr.net https://unpkg.com https://*.huggingface.co https://cdn.tailwindcss.com 'unsafe-inline' 'unsafe-eval'; style-src 'self' https://cdn.tailwindcss.com 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self' https://*.huggingface.co; worker-src 'self' blob:;">
     <title>Image Background Remover</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><rect width='16' height='16' fill='none'/></svg>" type="image/svg+xml">
     <base href="/removeBG/">
-    <script src="https://cdn.jsdelivr.net/npm/react@18.2.0/umd/react.production.min.js?t=1722363963"></script>
-    <script src="https://cdn.jsdelivr.net/npm/react-dom@18.2.0/umd/react-dom.production.min.js?t=1722363963"></script>
-    <script src="https://cdn.jsdelivr.net/npm/heic2any@0.0.4/dist/heic2any.min.js?t=1722363963"></script>
-    <script defer src="https://cdn.tailwindcss.com?t=1722363963"></script>
-    <script type="module">
-        import * as transformers from 'https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.0.1/dist/transformers.min.js?t=1722363963';
-        window.transformersPipeline = transformers.pipeline;
-        window.transformersReady = true;
-        console.log('Transformers.js loaded as module');
+    <script src="https://cdn.jsdelivr.net/npm/react@18.2.0/umd/react.production.min.js?t=1722363964"></script>
+    <script>
+        if (!window.React || !window.React.useState) {
+            console.warn('CDN react.min.js failed, trying fallback');
+            document.write('<script src="https://unpkg.com/react@18.2.0/umd/react.production.min.js?t=1722363964"><\/script>');
+        }
+        console.log('React loaded:', !!window.React, !!window.React && !!window.React.useState);
     </script>
+    <script src="https://cdn.jsdelivr.net/npm/react-dom@18.2.0/umd/react-dom.production.min.js?t=1722363964"></script>
+    <script>
+        if (!window.ReactDOM || !window.ReactDOM.createRoot) {
+            console.warn('CDN react-dom.min.js failed, trying fallback');
+            document.write('<script src="https://unpkg.com/react-dom@18.2.0/umd/react-dom.production.min.js?t=1722363964"><\/script>');
+        }
+        console.log('ReactDOM loaded:', !!window.ReactDOM, !!window.ReactDOM && !!window.ReactDOM.createRoot);
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/heic2any@0.0.4/dist/heic2any.min.js?t=1722363964"></script>
+    <script>
+        if (!window.heic2any) {
+            console.warn('CDN heic2any.min.js failed, trying fallback');
+            document.write('<script src="https://unpkg.com/heic2any@0.0.4/dist/heic2any.min.js?t=1722363964"><\/script>');
+        }
+        console.log('heic2any loaded:', !!window.heic2any);
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.0.1/dist/transformers.min.js?t=1722363964"></script>
+    <script>
+        if (!window.transformers) {
+            console.warn('CDN transformers.min.js failed, trying fallback');
+            document.write('<script src="https://unpkg.com/@huggingface/transformers@3.0.1/dist/transformers.min.js?t=1722363964"><\/script>');
+        }
+        window.transformersPipeline = window.transformers?.pipeline;
+        window.transformersReady = !!window.transformersPipeline;
+        console.log('Transformers.js loaded:', !!window.transformers, !!window.transformersPipeline);
+    </script>
+    <script defer src="https://cdn.tailwindcss.com?t=1722363964"></script>
 </head>
 <body>
     <div id="root" class="min-h-screen bg-gray-100 flex items-center justify-center"></div>
     <script>
-        // Dependency check
-        if (!window.React || !window.React.useState || !window.ReactDOM || !window.ReactDOM.createRoot || !window.heic2any || !window.transformersReady) {
-            document.getElementById('root').innerHTML = `
-                <div class="text-center text-red-500 p-4">
-                    <p>Error: Required libraries failed to load.</p>
-                    <p>Details: React=${!!window.React}, React.useState=${!!window.React && !!window.React.useState}, ReactDOM=${!!window.ReactDOM}, ReactDOM.createRoot=${!!window.ReactDOM && !!window.ReactDOM.createRoot}, heic2any=${!!window.heic2any}, transformersReady=${!!window.transformersReady}</p>
-                    <p>Please refresh the page or check the console (F12) for details.</p>
-                </div>`;
-            console.error('Dependency check failed:', {
+        // Polling-based dependency check
+        function checkDependencies(attempt = 0, maxAttempts = 50) {
+            const deps = {
                 React: !!window.React,
                 React_useState: !!window.React && !!window.React.useState,
                 ReactDOM: !!window.ReactDOM,
                 ReactDOM_createRoot: !!window.ReactDOM && !!window.ReactDOM.createRoot,
                 heic2any: !!window.heic2any,
                 transformersReady: !!window.transformersReady
-            });
-        } else {
+            };
+            if (deps.React && deps.React_useState && deps.ReactDOM && deps.ReactDOM_createRoot && deps.heic2any && deps.transformersReady) {
+                console.log('All dependencies loaded, rendering app');
+                renderApp();
+            } else {
+                if (attempt >= maxAttempts) {
+                    document.getElementById('root').innerHTML = `
+                        <div class="text-center text-red-500 p-4">
+                            <p>Error: Failed to load required libraries after ${maxAttempts} attempts.</p>
+                            <p>Details: React=${deps.React}, React.useState=${deps.React_useState}, ReactDOM=${deps.ReactDOM}, ReactDOM.createRoot=${deps.ReactDOM_createRoot}, heic2any=${deps.heic2any}, transformersReady=${deps.transformersReady}</p>
+                            <p>Please refresh the page or check the console (F12) for details.</p>
+                        </div>`;
+                    console.error('Dependency check failed after max attempts:', deps);
+                    return;
+                }
+                console.warn(`Waiting for dependencies (attempt ${attempt + 1}/${maxAttempts}):`, deps);
+                document.getElementById('root').innerHTML = `
+                    <div class="text-center text-gray-600 p-4">
+                        <p>Loading dependencies... Please wait.</p>
+                    </div>`;
+                setTimeout(() => checkDependencies(attempt + 1, maxAttempts), 100);
+            }
+        }
+
+        function renderApp() {
             const { useState, useEffect, useRef } = React;
             const { createRoot } = ReactDOM;
 
@@ -328,6 +370,8 @@
                     </div>`;
             }
         }
+
+        window.addEventListener('load', () => checkDependencies());
     </script>
 </body>
 </html>
