@@ -12,18 +12,18 @@
     <script defer src="https://cdn.jsdelivr.net/npm/heic2any@0.0.4/dist/heic2any.min.js"></script>
     <script defer src="https://cdn.tailwindcss.com"></script>
     <script type="module">
-        import * as transformers from 'https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.0.1/dist/transformers.min.js';
+        import * as transformers from './transformers.min.js';
         window.transformersPipeline = transformers.pipeline;
-        window.transformersReady = true; // Signal that transformers.js is loaded
+        window.transformersReady = true;
+        console.log('Transformers.js loaded as module');
     </script>
     <script defer>
-        // Wait for all scripts to load before executing app.js
         window.addEventListener('load', () => {
             if (!window.React || !window.ReactDOM || !window.transformersReady) {
                 document.getElementById('root').innerHTML = `
                     <div class="text-center text-red-500 p-4">
                         <p>Error: Required libraries (React, ReactDOM, or Transformers.js) failed to load.</p>
-                        <p>Please refresh the page or check the console (F12) for details.</p>
+                        <p>Please clear your browser cache, refresh the page, or check the console (F12) for details.</p>
                     </div>`;
                 console.error('Required libraries not loaded:', {
                     React: !!window.React,
@@ -32,9 +32,8 @@
                 });
                 return;
             }
-            // Dynamically load app.js to ensure dependencies are ready
             const script = document.createElement('script');
-            script.src = './app.js';
+            script.src = './app.js?t=' + new Date().getTime(); // Cache-busting
             script.defer = true;
             document.head.appendChild(script);
         });
@@ -43,7 +42,6 @@
 <body>
     <div id="root" class="min-h-screen bg-gray-100 flex items-center justify-center"></div>
     <script>
-        // Service Worker for offline caching
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', async () => {
                 try {
@@ -51,7 +49,6 @@
                     if (!response.ok) {
                         throw new Error('sw.js not found at /removeBG/sw.js. Ensure it is in the repository root.');
                     }
-                    // Add delay to stabilize registration
                     await new Promise(resolve => setTimeout(resolve, 100));
                     const reg = await navigator.serviceWorker.register('./sw.js', { scope: '/removeBG/' });
                     console.log('Service Worker registered:', reg);
