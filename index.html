@@ -7,34 +7,34 @@
     <title>Image Background Remover</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><rect width='16' height='16' fill='none'/></svg>" type="image/svg+xml">
     <base href="/removeBG/">
-    <script src="https://cdn.jsdelivr.net/npm/react@18.2.0/umd/react.production.min.js?t=1722363966"></script>
+    <script src="https://cdn.jsdelivr.net/npm/react@18.2.0/umd/react.production.min.js?t=1722363967"></script>
     <script>
         if (!window.React || !window.React.useState) {
             console.warn('CDN react.min.js failed, loading fallback');
             const script = document.createElement('script');
-            script.src = 'https://unpkg.com/react@18.2.0/umd/react.production.min.js?t=1722363966';
+            script.src = 'https://unpkg.com/react@18.2.0/umd/react.production.min.js?t=1722363967';
             script.async = false;
             document.head.appendChild(script);
         }
         console.log('React loaded:', !!window.React, !!window.React && !!window.React.useState);
     </script>
-    <script src="https://cdn.jsdelivr.net/npm/react-dom@18.2.0/umd/react-dom.production.min.js?t=1722363966"></script>
+    <script src="https://cdn.jsdelivr.net/npm/react-dom@18.2.0/umd/react-dom.production.min.js?t=1722363967"></script>
     <script>
         if (!window.ReactDOM || !window.ReactDOM.createRoot) {
             console.warn('CDN react-dom.min.js failed, loading fallback');
             const script = document.createElement('script');
-            script.src = 'https://unpkg.com/react-dom@18.2.0/umd/react-dom.production.min.js?t=1722363966';
+            script.src = 'https://unpkg.com/react-dom@18.2.0/umd/react-dom.production.min.js?t=1722363967';
             script.async = false;
             document.head.appendChild(script);
         }
         console.log('ReactDOM loaded:', !!window.ReactDOM, !!window.ReactDOM && !!window.ReactDOM.createRoot);
     </script>
-    <script src="https://cdn.jsdelivr.net/npm/heic2any@0.0.4/dist/heic2any.min.js?t=1722363966"></script>
+    <script src="https://cdn.jsdelivr.net/npm/heic2any@0.0.4/dist/heic2any.min.js?t=1722363967"></script>
     <script>
         if (!window.heic2any) {
             console.warn('CDN heic2any.min.js failed, loading fallback');
             const script = document.createElement('script');
-            script.src = 'https://unpkg.com/heic2any@0.0.4/dist/heic2any.min.js?t=1722363966';
+            script.src = 'https://unpkg.com/heic2any@0.0.4/dist/heic2any.min.js?t=1722363967';
             script.async = false;
             document.head.appendChild(script);
         }
@@ -42,14 +42,14 @@
     </script>
     <script type="module">
         try {
-            const transformers = await import('https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.0.1/dist/transformers.min.js?t=1722363966');
+            const transformers = await import('https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.0.1/dist/transformers.min.js?t=1722363967');
             window.transformersPipeline = transformers.pipeline;
             window.transformersReady = true;
             console.log('Transformers.js loaded:', !!window.transformersPipeline);
         } catch (err) {
             console.warn('CDN transformers.min.js failed, trying fallback');
             try {
-                const transformers = await import('https://unpkg.com/@huggingface/transformers@3.0.1/dist/transformers.min.js?t=1722363966');
+                const transformers = await import('https://unpkg.com/@huggingface/transformers@3.0.1/dist/transformers.min.js?t=1722363967');
                 window.transformersPipeline = transformers.pipeline;
                 window.transformersReady = true;
                 console.log('Transformers.js fallback loaded:', !!window.transformersPipeline);
@@ -59,7 +59,7 @@
             }
         }
     </script>
-    <script defer src="https://cdn.tailwindcss.com?t=1722363966"></script>
+    <script defer src="https://cdn.tailwindcss.com?t=1722363967"></script>
 </head>
 <body>
     <div id="root" class="min-h-screen bg-gray-100 flex items-center justify-center"></div>
@@ -113,10 +113,10 @@
                     async function loadModel() {
                         try {
                             setLoading(true);
-                            console.log('Loading BRIA-RMBG-v1.4 model...');
+                            console.log('Loading xenova/segm_model...');
                             const pipeline = await window.transformersPipeline(
                                 'image-segmentation',
-                                'briaai/RMBG-1.4',
+                                'xenova/segm_model',
                                 { cache: 'force-cache', device: window.navigator.gpu ? 'webgpu' : 'wasm' }
                             );
                             setModel(pipeline);
@@ -368,7 +368,7 @@
                         'p',
                         { className: 'text-center text-gray-600 mt-4' },
                         'Powered by ',
-                        React.createElement('a', { href: 'https://huggingface.co/briaai/RMBG-1.4', className: 'text-blue-600 hover:underline' }, 'BRIA-RMBG-v1.4'),
+                        React.createElement('a', { href: 'https://huggingface.co/xenova/segm_model', className: 'text-blue-600 hover:underline' }, 'xenova/segm_model'),
                         ' and ',
                         React.createElement('a', { href: 'https://huggingface.co/docs/transformers.js', className: 'text-blue-600 hover:underline' }, 'Transformers.js')
                     )
