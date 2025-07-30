@@ -1,43 +1,66 @@
-const CACHE_NAME = 'bg-remover-cache-v1';
-const urlsToCache = [
-    './',
-    './index.html',
-    './app.js',
-    'https://cdn.jsdelivr.net/npm/react@18.2.0/umd/react.production.min.js',
-    'https://cdn.jsdelivr.net/npm/react-dom@18.2.0/umd/react-dom.production.min.js',
-    'https://cdn.tailwindcss.com',
-    'https://cdn.jsdelivr.net/npm/heic2any@0.0.4/dist/heic2any.min.js',
-    'https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.0.1/dist/transformers.min.js'
-];
-
-self.addEventListener('install', event => {
-    event.waitUntil(
-        caches.open(CACHE_NAME).then(cache => {
-            console.log('Caching assets');
-            return cache.addAll(urlsToCache);
-        }).catch(err => {
-            console.error('Cache open error:', err);
-        })
-    );
-});
-
-self.addEventListener('fetch', event => {
-    event.respondWith(
-        caches.match(event.request).then(response => {
-            return response || fetch(event.request).catch(err => {
-                console.error('Fetch error:', err);
-                return new Response('Offline resource unavailable', { status: 503, statusText: 'Service Unavailable' });
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://cdn.jsdelivr.net https://*.huggingface.co https://cdn.tailwindcss.com 'unsafe-inline'; style-src 'self' https://cdn.tailwindcss.com 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self' https://*.huggingface.co; worker-src 'self' blob:;">
+    <title>Offline Image Background Remover</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><rect width='16' height='16' fill='none'/></svg>" type="image/svg+xml">
+    <base href="/removeBG/">
+    <script src="https://cdn.jsdelivr.net/npm/react@18.2.0/umd/react.production.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/react-dom@18.2.0/umd/react-dom.production.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/heic2any@0.0.4/dist/heic2any.min.js"></script>
+</head>
+<body>
+    <div id="root" class="min-h-screen bg-gray-100 flex items-center justify-center"></div>
+    <script type="module">
+        // Check if app.js exists before importing
+        fetch('./app.js')
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('app.js not found at /removeBG/app.js. Ensure it is in the repository root.');
+                }
+                return import('./app.js');
+            })
+            .catch(err => {
+                console.error('Failed to load app.js:', err);
+                document.getElementById('root').innerHTML = `
+                    <div class="text-center text-red-500 p-4">
+                        <p>Error loading application: ${err.message}</p>
+                        <p>Please ensure app.js is in the repository root (/removeBG/app.js) and deployed correctly on GitHub Pages.</p>
+                        <p>Check the console (F12) for details.</p>
+                    </div>`;
             });
-        })
-    );
-});
 
-self.addEventListener('activate', event => {
-    event.waitUntil(
-        caches.keys().then(cacheNames => {
-            return Promise.all(
-                cacheNames.filter(name => name !== CACHE_NAME).map(name => caches.delete(name))
-            );
-        })
-    );
-});
+        // Service Worker for offline caching
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', async () => {
+                try {
+                    const response = await fetch('./sw.js');
+                    if (!response.ok) {
+                        throw new Error('sw.js not found at /removeBG/sw.js. Ensure it is in the repository root.');
+                    }
+                    const reg = await navigator.serviceWorker.register('./sw.js', { scope: '/removeBG/' });
+                    console.log('Service Worker registered:', reg);
+                } catch (err) {
+                    console.error('Service Worker registration failed:', err);
+                    document.getElementById('root').innerHTML = `
+                        <div class="text-center text-red-500 p-4">
+                            <p>Service Worker failed to register: ${err.message}</p>
+                            <p>Offline mode may be limited. Ensure sw.js is in the repository root (/removeBG/sw.js).</p>
+                            <p>Check the console (F12) for details.</p>
+                        </div>`;
+                }
+            });
+        } else {
+            console.warn('Service Worker not supported. Offline mode may be limited.');
+            document.getElementById('root').innerHTML = `
+                <div class="text-center text-red-500 p-4">
+                    <p>Service Worker not supported. Offline mode may be limited.</p>
+                    <p>Please use a modern browser like Chrome or Edge.</p>
+                </div>`;
+        }
+    </script>
+</body>
+</html>
