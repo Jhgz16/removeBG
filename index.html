@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://*.huggingface.co https://cdn.tailwindcss.com 'unsafe-inline' 'unsafe-eval'; style-src 'self' https://cdn.tailwindcss.com 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self' https://*.huggingface.co; worker-src 'self' blob:;">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://*.huggingface.co https://cdn.tailwindcss.com https://cdn.jsdelivr.net 'unsafe-inline' 'unsafe-eval'; style-src 'self' https://cdn.tailwindcss.com 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self' https://*.huggingface.co; worker-src 'self' blob:;">
     <title>Offline Image Background Remover</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><rect width='16' height='16' fill='none'/></svg>" type="image/svg+xml">
     <base href="/removeBG/">
@@ -11,7 +11,8 @@
     <script>console.log('React loaded:', !!window.React);</script>
     <script src="./react-dom.min.js"></script>
     <script>console.log('ReactDOM loaded:', !!window.ReactDOM);</script>
-    <script defer src="https://cdn.jsdelivr.net/npm/heic2any@0.0.4/dist/heic2any.min.js?t=1722363960"></script>
+    <script src="./heic2any.min.js"></script>
+    <script>console.log('heic2any loaded:', !!window.heic2any);</script>
     <script defer src="https://cdn.tailwindcss.com?t=1722363960"></script>
     <script type="module">
         import * as transformers from './transformers.min.js?t=1722363960';
