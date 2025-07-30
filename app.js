@@ -280,5 +280,9 @@ try {
     ReactDOM.render(App(), document.getElementById('root'));
 } catch (err) {
     console.error('ReactDOM render error:', err);
-    document.getElementById('root').innerHTML = '<p class="text-red-500 text-center">Error initializing application: ' + err.message + '. Check the console (F12) for details.</p>';
+    document.getElementById('root').innerHTML = `
+        <div class="text-center text-red-500 p-4">
+            <p>Error initializing application: ${err.message}</p>
+            <p>Check the console (F12) for details.</p>
+        </div>`;
 }
