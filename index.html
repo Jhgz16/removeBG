@@ -8,41 +8,55 @@
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><rect width='16' height='16' fill='none'/></svg>" type="image/svg+xml">
     <base href="/removeBG/">
     <script src="./react.min.js"></script>
+    <script>console.log('React loaded:', !!window.React);</script>
     <script src="./react-dom.min.js"></script>
-    <script defer src="https://cdn.jsdelivr.net/npm/heic2any@0.0.4/dist/heic2any.min.js"></script>
-    <script defer src="https://cdn.tailwindcss.com"></script>
+    <script>console.log('ReactDOM loaded:', !!window.ReactDOM);</script>
+    <script defer src="https://cdn.jsdelivr.net/npm/heic2any@0.0.4/dist/heic2any.min.js?t=1722363960"></script>
+    <script defer src="https://cdn.tailwindcss.com?t=1722363960"></script>
     <script type="module">
-        import * as transformers from './transformers.min.js';
+        import * as transformers from './transformers.min.js?t=1722363960';
         window.transformersPipeline = transformers.pipeline;
         window.transformersReady = true;
         console.log('Transformers.js loaded as module');
     </script>
     <script>
-        // Polling check for dependencies before loading app.js
-        function loadAppJs() {
+        // Polling check for dependencies with timeout
+        function loadAppJs(attempt = 0, maxAttempts = 50) {
             if (window.React && window.ReactDOM && window.transformersReady && window.heic2any) {
                 const script = document.createElement('script');
-                script.src = './app.js?t=' + new Date().getTime();
+                script.src = './app.js?t=1722363960';
                 script.defer = true;
                 document.head.appendChild(script);
                 console.log('app.js loaded dynamically');
             } else {
-                console.warn('Waiting for dependencies:', {
+                if (attempt >= maxAttempts) {
+                    document.getElementById('root').innerHTML = `
+                        <div class="text-center text-red-500 p-4">
+                            <p>Error: Failed to load required libraries after ${maxAttempts} attempts.</p>
+                            <p>Please clear your browser cache, refresh the page, or check the console (F12) for details.</p>
+                        </div>`;
+                    console.error('Dependency load timeout:', {
+                        React: !!window.React,
+                        ReactDOM: !!window.ReactDOM,
+                        transformersReady: !!window.transformersReady,
+                        heic2any: !!window.heic2any
+                    });
+                    return;
+                }
+                console.warn('Waiting for dependencies (attempt ' + attempt + '):', {
                     React: !!window.React,
                     ReactDOM: !!window.ReactDOM,
                     transformersReady: !!window.transformersReady,
                     heic2any: !!window.heic2any
                 });
-                if (!document.getElementById('root').innerHTML) {
-                    document.getElementById('root').innerHTML = `
-                        <div class="text-center text-red-500 p-4">
-                            <p>Loading dependencies... Please wait.</p>
-                        </div>`;
-                }
-                setTimeout(loadAppJs, 100); // Retry every 100ms
+                document.getElementById('root').innerHTML = `
+                    <div class="text-center text-gray-600 p-4">
+                        <p>Loading dependencies... Please wait.</p>
+                    </div>`;
+                setTimeout(() => loadAppJs(attempt + 1, maxAttempts), 100);
             }
         }
-        window.addEventListener('load', loadAppJs);
+        window.addEventListener('load', () => loadAppJs());
     </script>
 </head>
 <body>
