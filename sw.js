@@ -5,8 +5,8 @@ const urlsToCache = [
     './app.js',
     'https://cdn.jsdelivr.net/npm/react@18.2.0/umd/react.production.min.js',
     'https://cdn.jsdelivr.net/npm/react-dom@18.2.0/umd/react-dom.production.min.js',
-    'https://cdn.jsdelivr.net/npm/heic2any@0.0.4/dist/heic2any.min.js',
-    'https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.0.1/dist/transformers.min.js'
+    'https://cdn.jsdelivr.net/npm/heic2any@0.0.4/dist/heic2any.min.js'
+    // Removed transformers.js from cache to avoid non-module execution
 ];
 
 self.addEventListener('install', event => {
@@ -21,6 +21,11 @@ self.addEventListener('install', event => {
 });
 
 self.addEventListener('fetch', event => {
+    // Bypass caching for transformers.js to ensure module context
+    if (event.request.url.includes('transformers.min.js')) {
+        event.respondWith(fetch(event.request));
+        return;
+    }
     event.respondWith(
         caches.match(event.request).then(response => {
             return response || fetch(event.request).catch(err => {
