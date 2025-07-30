@@ -1,4 +1,4 @@
-const CACHE_NAME = 'bg-remover-cache-v4'; // Updated cache name to force refresh
+const CACHE_NAME = 'bg-remover-cache-v5'; // Updated cache name to force refresh
 const urlsToCache = [
     './',
     './index.html',
@@ -6,7 +6,7 @@ const urlsToCache = [
     './react.min.js',
     './react-dom.min.js',
     './transformers.min.js',
-    'https://cdn.jsdelivr.net/npm/heic2any@0.0.4/dist/heic2any.min.js?t=1722363960'
+    './heic2any.min.js'
 ];
 
 self.addEventListener('install', event => {
