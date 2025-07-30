@@ -1,12 +1,13 @@
-if (!window.React || !window.ReactDOM || !window.transformersPipeline) {
+if (!window.React || !window.ReactDOM || !window.transformersPipeline || !window.heic2any) {
     console.error('Required libraries not loaded:', {
         React: !!window.React,
         ReactDOM: !!window.ReactDOM,
-        transformersPipeline: !!window.transformersPipeline
+        transformersPipeline: !!window.transformersPipeline,
+        heic2any: !!window.heic2any
     });
     document.getElementById('root').innerHTML = `
         <div class="text-center text-red-500 p-4">
-            <p>Error: Required libraries (React, ReactDOM, or Transformers.js) failed to load.</p>
+            <p>Error: Required libraries (React, ReactDOM, Transformers.js, or heic2any) failed to load.</p>
             <p>Please clear your browser cache, refresh the page, or check the console (F12) for details.</p>
         </div>`;
 } else {
