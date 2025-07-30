@@ -11,7 +11,10 @@ function App() {
             try {
                 setLoading(true);
                 console.log('Loading BRIA-RMBG-v1.4 model...');
-                const pipeline = await transformers.pipeline(
+                if (!window.transformersPipeline) {
+                    throw new Error('Transformers.js not loaded. Please refresh the page.');
+                }
+                const pipeline = await window.transformersPipeline(
                     'image-segmentation',
                     'briaai/RMBG-1.4',
                     { cache: 'force-cache', device: window.navigator.gpu ? 'webgpu' : 'wasm' }
