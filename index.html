@@ -12,28 +12,11 @@
     <script src="https://cdn.jsdelivr.net/npm/heic2any@0.0.4/dist/heic2any.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.0.1/dist/transformers.min.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="./app.js"></script>
 </head>
 <body>
     <div id="root" class="min-h-screen bg-gray-100 flex items-center justify-center"></div>
-    <script type="module">
-        // Check if app.js exists before importing
-        fetch('./app.js')
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error('app.js not found at /removeBG/app.js. Ensure it is in the repository root.');
-                }
-                return import('./app.js');
-            })
-            .catch(err => {
-                console.error('Failed to load app.js:', err);
-                document.getElementById('root').innerHTML = `
-                    <div class="text-center text-red-500 p-4">
-                        <p>Error loading application: ${err.message}</p>
-                        <p>Please ensure app.js is in the repository root (/removeBG/app.js) and deployed correctly on GitHub Pages.</p>
-                        <p>Check the console (F12) for details.</p>
-                    </div>`;
-            });
-
+    <script>
         // Service Worker for offline caching
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', async () => {
