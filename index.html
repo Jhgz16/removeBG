@@ -1,292 +1,43 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://cdn.jsdelivr.net https://*.huggingface.co https://cdn.tailwindcss.com 'unsafe-inline' 'unsafe-eval'; style-src 'self' https://cdn.tailwindcss.com 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self' https://*.huggingface.co; worker-src 'self' blob:;">
-    <title>Offline Image Background Remover</title>
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><rect width='16' height='16' fill='none'/></svg>" type="image/svg+xml">
-    <base href="/removeBG/">
-    <script src="https://cdn.jsdelivr.net/npm/react@18.2.0/umd/react.production.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/react-dom@18.2.0/umd/react-dom.production.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/babel-standalone@7.24.7/babel.min.js"></script>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/heic2any@0.0.4/dist/heic2any.min.js"></script>
-</head>
-<body>
-    <div id="root" class="min-h-screen bg-gray-100 flex items-center justify-center"></div>
-    <script type="module">
-        import React from 'https://cdn.jsdelivr.net/npm/react@18.2.0/umd/react.production.min.js';
-        import ReactDOM from 'https://cdn.jsdelivr.net/npm/react-dom@18.2.0/umd/react-dom.production.min.js';
-        import * as transformers from 'https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.0.1/dist/transformers.min.js';
+const CACHE_NAME = 'bg-remover-cache-v1';
+const urlsToCache = [
+    './',
+    './index.html',
+    './app.js',
+    'https://cdn.jsdelivr.net/npm/react@18.2.0/umd/react.production.min.js',
+    'https://cdn.jsdelivr.net/npm/react-dom@18.2.0/umd/react-dom.production.min.js',
+    'https://cdn.tailwindcss.com',
+    'https://cdn.jsdelivr.net/npm/heic2any@0.0.4/dist/heic2any.min.js',
+    'https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.0.1/dist/transformers.min.js'
+];
 
-        // Service Worker for offline caching
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('./sw.js').then(reg => {
-                    console.log('Service Worker registered:', reg);
-                }).catch(err => {
-                    console.error('Service Worker registration failed:', err);
-                    document.getElementById('root').innerHTML = '<p class="text-red-500 text-center">Service Worker failed to register: ' + err.message + '. Ensure sw.js is in the repository root (/removeBG/sw.js). Offline mode may be limited.</p>';
-                });
+self.addEventListener('install', event => {
+    event.waitUntil(
+        caches.open(CACHE_NAME).then(cache => {
+            console.log('Caching assets');
+            return cache.addAll(urlsToCache);
+        }).catch(err => {
+            console.error('Cache open error:', err);
+        })
+    );
+});
+
+self.addEventListener('fetch', event => {
+    event.respondWith(
+        caches.match(event.request).then(response => {
+            return response || fetch(event.request).catch(err => {
+                console.error('Fetch error:', err);
+                return new Response('Offline resource unavailable', { status: 503, statusText: 'Service Unavailable' });
             });
-        } else {
-            console.warn('Service Worker not supported. Offline mode may be limited.');
-            document.getElementById('root').innerHTML = '<p class="text-red-500 text-center">Service Worker not supported. Offline mode may be limited.</p>';
-        }
+        })
+    );
+});
 
-        function App() {
-            const [images, setImages] = React.useState([]);
-            const [resultImages, setResultImages] = React.useState([]);
-            const [loading, setLoading] = React.useState(false);
-            const [error, setError] = React.useState(null);
-            const [model, setModel] = React.useState(null);
-            const canvasRef = React.useRef(null);
-
-            // Load BRIA-RMBG-v1.4 model on component mount
-            React.useEffect(() => {
-                async function loadModel() {
-                    try {
-                        setLoading(true);
-                        console.log('Loading BRIA-RMBG-v1.4 model...');
-                        const pipeline = await transformers.pipeline(
-                            'image-segmentation',
-                            'briaai/RMBG-1.4',
-                            { cache: 'force-cache', device: window.navigator.gpu ? 'webgpu' : 'wasm' }
-                        );
-                        setModel(pipeline);
-                        console.log('Model loaded successfully.');
-                    } catch (err) {
-                        console.error('Model loading error:', err);
-                        setError(`Failed to load AI model: ${err.message}. Please ensure WebGPU/WebAssembly support and try again. Check the console (F12) for details.`);
-                    } finally {
-                        setLoading(false);
-                    }
-                }
-                loadModel();
-            }, []);
-
-            const convertHeicToPng = async (file) => {
-                if (['image/heic', 'image/heif'].includes(file.type)) {
-                    try {
-                        const converted = await window.heic2any({ blob: file, toType: 'image/png' });
-                        return new File([converted], file.name.replace(/\.(heic|heif)$/i, '.png'), { type: 'image/png' });
-                    } catch (err) {
-                        console.error('HEIC conversion error:', err);
-                        throw new Error(`Failed to convert ${file.name}: ${err.message}`);
-                    }
-                }
-                return file;
-            };
-
-            const handleImageUpload = async (event) => {
-                setError(null);
-                const files = Array.from(event.target.files);
-                const validFiles = [];
-
-                for (const file of files) {
-                    if (!['image/jpeg', 'image/png', 'image/heic', 'image/heif'].includes(file.type)) {
-                        setError('Please upload valid image files (JPG, PNG, HEIC, HEIF).');
-                        return;
-                    }
-                    try {
-                        const convertedFile = await convertHeicToPng(file);
-                        validFiles.push(convertedFile);
-                    } catch (err) {
-                        setError(err.message);
-                        return;
-                    }
-                }
-
-                setImages(validFiles);
-                setResultImages([]);
-                console.log('Uploaded files:', validFiles.map(f => f.name));
-            };
-
-            const removeBackground = async () => {
-                if (!model) {
-                    setError('AI model not loaded. Please wait and try again.');
-                    return;
-                }
-                if (images.length === 0) {
-                    setError('Please upload at least one image.');
-                    return;
-                }
-
-                setLoading(true);
-                setError(null);
-                const results = [];
-                const canvas = canvasRef.current;
-                const ctx = canvas.getContext('2d', { willReadFrequently: true });
-
-                for (const image of images) {
-                    try {
-                        console.log(`Processing ${image.name}...`);
-                        const img = new Image();
-                        img.src = URL.createObjectURL(image);
-                        await new Promise(resolve => img.onload = resolve);
-
-                        canvas.width = img.width;
-                        canvas.height = img.height;
-
-                        const mask = await model(img.src);
-                        if (!mask || !mask.data) {
-                            throw new Error('Invalid mask data from model.');
-                        }
-
-                        ctx.drawImage(img, 0, 0);
-                        const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-                        const maskData = mask.data;
-
-                        for (let i = 0; i < imageData.data.length; i += 4) {
-                            if (!maskData[i / 4]) {
-                                imageData.data[i + 3] = 0; // Set alpha to 0 for background
-                            }
-                        }
-                        ctx.putImageData(imageData, 0, 0);
-
-                        const blob = await new Promise(resolve =>
-                            canvas.toBlob(resolve, 'image/png')
-                        );
-                        results.push({ url: URL.createObjectURL(blob), name: image.name });
-                        console.log(`Processed ${image.name} successfully.`);
-                    } catch (err) {
-                        console.error(`Error processing ${image.name}:`, err);
-                        setError(`Error processing ${image.name}: ${err.message}`);
-                    }
-                }
-
-                setResultImages(results);
-                setLoading(false);
-            };
-
-            const fineTune = (index, action, x, y, size) => {
-                const canvas = canvasRef.current;
-                const ctx = canvas.getContext('2d');
-                const result = resultImages[index];
-                const img = new Image();
-                img.src = result.url;
-                img.onload = () => {
-                    canvas.width = img.width;
-                    canvas.height = img.height;
-                    ctx.drawImage(img, 0, 0);
-                    ctx.beginPath();
-                    ctx.arc(x, y, size, 0, Math.PI * 2);
-                    ctx.fillStyle = action === 'restore' ? 'rgba(255, 255, 255, 1)' : 'rgba(0, 0, 0, 0)';
-                    ctx.fill();
-                    canvas.toBlob(blob => {
-                        const newUrl = URL.createObjectURL(blob);
-                        setResultImages(prev =>
-                            prev.map((item, i) =>
-                                i === index ? { ...item, url: newUrl } : item
-                            )
-                        );
-                    }, 'image/png');
-                };
-            };
-
-            const downloadImages = () => {
-                resultImages.forEach((result, index) => {
-                    const link = document.createElement('a');
-                    link.href = result.url;
-                    link.download = `bg-removed-${result.name}`;
-                    link.click();
-                });
-            };
-
-            return (
-                <div className="container mx-auto p-4 max-w-3xl">
-                    <h1 className="text-3xl font-bold text-center mb-6 text-gray-800">Offline Image Background Remover</h1>
-                    <div className="bg-white p-6 rounded-lg shadow-md">
-                        <div className="mb-4">
-                            <label className="block text-gray-700 mb-2">Upload Images (JPG, PNG, HEIC, HEIF)</label>
-                            <input
-                                type="file"
-                                accept="image/jpeg,image/png,image/heic,image/heif"
-                                multiple
-                                onChange={handleImageUpload}
-                                className="w-full p-2 border border-gray-300 rounded"
-                            />
-                        </div>
-                        {error && <p className="text-red-500 mb-4">{error}</p>}
-                        {images.length > 0 && (
-                            <div className="mb-4">
-                                <p className="text-gray-700 mb-2">Preview:</p>
-                                <div className="grid grid-cols-2 gap-4">
-                                    {images.map((img, index) => (
-                                        <img
-                                            key={index}
-                                            src={URL.createObjectURL(img)}
-                                            alt={`Preview ${index}`}
-                                            className="max-w-full h-auto rounded"
-                                        />
-                                    ))}
-                                </div>
-                            </div>
-                        )}
-                        <button
-                            onClick={removeBackground}
-                            disabled={loading || !model}
-                            className={`w-full py-2 px-4 rounded text-white font-semibold ${
-                                loading || !model ? 'bg-gray-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700'
-                            }`}
-                        >
-                            {loading ? 'Processing...' : model ? 'Remove Background' : 'Loading AI Model...'}
-                        </button>
-                        {resultImages.length > 0 && (
-                            <div className="mt-4">
-                                <p className="text-gray-700 mb-2">Results (Click to erase, Restore button to undo):</p>
-                                <div className="grid grid-cols-2 gap-4">
-                                    {resultImages.map((result, index) => (
-                                        <div key={index} className="relative">
-                                            <img
-                                                src={result.url}
-                                                alt={`Result ${index}`}
-                                                className="max-w-full h-auto rounded"
-                                                onClick={e => {
-                                                    const rect = e.target.getBoundingClientRect();
-                                                    const x = e.clientX - rect.left;
-                                                    const y = e.clientY - rect.top;
-                                                    fineTune(index, 'erase', x, y, 10);
-                                                }}
-                                            />
-                                            <button
-                                                onClick={e => {
-                                                    const rect = e.target.previousSibling.getBoundingClientRect();
-                                                    const x = e.clientX - rect.left;
-                                                    const y = e.clientY - rect.top;
-                                                    fineTune(index, 'restore', x, y, 10);
-                                                }}
-                                                className="absolute top-2 right-2 bg-yellow-500 text-white px-2 py-1 rounded"
-                                            >
-                                                Restore
-                                            </button>
-                                        </div>
-                                    ))}
-                                </div>
-                                <button
-                                    onClick={downloadImages}
-                                    className="w-full mt-4 py-2 px-4 bg-green-600 hover:bg-green-700 text-white rounded font-semibold"
-                                >
-                                    Download All Transparent PNGs
-                                </button>
-                            </div>
-                        )}
-                    </div>
-                    <canvas ref={canvasRef} style={{ display: 'none' }}></canvas>
-                    <p className="text-center text-gray-600 mt-4">
-                        Powered by <a href="https://huggingface.co/briaai/RMBG-1.4" className="text-blue-600 hover:underline">BRIA-RMBG-v1.4</a> and <a href="https://huggingface.co/docs/transformers.js" className="text-blue-600 hover:underline">Transformers.js</a>
-                    </p>
-                </div>
+self.addEventListener('activate', event => {
+    event.waitUntil(
+        caches.keys().then(cacheNames => {
+            return Promise.all(
+                cacheNames.filter(name => name !== CACHE_NAME).map(name => caches.delete(name))
             );
-        }
-
-        try {
-            ReactDOM.render(<App />, document.getElementById('root'));
-        } catch (err) {
-            console.error('ReactDOM render error:', err);
-            document.getElementById('root').innerHTML = '<p class="text-red-500 text-center">Error initializing application: ' + err.message + '. Check the console (F12) for details.</p>';
-        }
-    </script>
-</body>
-</html>
+        })
+    );
+});
