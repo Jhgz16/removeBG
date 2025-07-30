@@ -1,11 +1,11 @@
-const CACHE_NAME = 'bg-remover-cache-v2'; // Updated cache name to force refresh
+const CACHE_NAME = 'bg-remover-cache-v3'; // Updated cache name to force refresh
 const urlsToCache = [
     './',
     './index.html',
     './app.js',
+    './react.min.js',
+    './react-dom.min.js',
     './transformers.min.js',
-    'https://cdn.jsdelivr.net/npm/react@18.2.0/umd/react.production.min.js?t=' + new Date().getTime(),
-    'https://cdn.jsdelivr.net/npm/react-dom@18.2.0/umd/react-dom.production.min.js?t=' + new Date().getTime(),
     'https://cdn.jsdelivr.net/npm/heic2any@0.0.4/dist/heic2any.min.js?t=' + new Date().getTime()
 ];
 
