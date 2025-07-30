@@ -3,7 +3,10 @@
 <head>
     <script src="https://cdn.jsdelivr.net/npm/react@18.2.0/umd/react.production.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/react-dom@18.2.0/umd/react-dom.production.min.js"></script>
-    <script>
+    <script type="module">
+        import * as transformers from 'https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.0.1/dist/transformers.min.js';
+        window.transformersPipeline = transformers.pipeline;
+        console.log('Transformers loaded:', !!window.transformersPipeline);
         const { useState } = React;
         const { createRoot } = ReactDOM;
         const App = () => {
