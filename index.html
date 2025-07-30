@@ -13,10 +13,32 @@
     <script defer src="https://cdn.tailwindcss.com"></script>
     <script type="module">
         import * as transformers from 'https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.0.1/dist/transformers.min.js';
-        // Expose transformers.pipeline globally for app.js
         window.transformersPipeline = transformers.pipeline;
+        window.transformersReady = true; // Signal that transformers.js is loaded
     </script>
-    <script defer src="./app.js"></script>
+    <script defer>
+        // Wait for all scripts to load before executing app.js
+        window.addEventListener('load', () => {
+            if (!window.React || !window.ReactDOM || !window.transformersReady) {
+                document.getElementById('root').innerHTML = `
+                    <div class="text-center text-red-500 p-4">
+                        <p>Error: Required libraries (React, ReactDOM, or Transformers.js) failed to load.</p>
+                        <p>Please refresh the page or check the console (F12) for details.</p>
+                    </div>`;
+                console.error('Required libraries not loaded:', {
+                    React: !!window.React,
+                    ReactDOM: !!window.ReactDOM,
+                    transformersReady: !!window.transformersReady
+                });
+                return;
+            }
+            // Dynamically load app.js to ensure dependencies are ready
+            const script = document.createElement('script');
+            script.src = './app.js';
+            script.defer = true;
+            document.head.appendChild(script);
+        });
+    </script>
 </head>
 <body>
     <div id="root" class="min-h-screen bg-gray-100 flex items-center justify-center"></div>
@@ -29,7 +51,7 @@
                     if (!response.ok) {
                         throw new Error('sw.js not found at /removeBG/sw.js. Ensure it is in the repository root.');
                     }
-                    // Add slight delay to stabilize registration
+                    // Add delay to stabilize registration
                     await new Promise(resolve => setTimeout(resolve, 100));
                     const reg = await navigator.serviceWorker.register('./sw.js', { scope: '/removeBG/' });
                     console.log('Service Worker registered:', reg);
