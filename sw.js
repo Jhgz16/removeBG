@@ -1,12 +1,12 @@
-const CACHE_NAME = 'bg-remover-cache-v1';
+const CACHE_NAME = 'bg-remover-cache-v2'; // Updated cache name to force refresh
 const urlsToCache = [
     './',
     './index.html',
     './app.js',
-    'https://cdn.jsdelivr.net/npm/react@18.2.0/umd/react.production.min.js',
-    'https://cdn.jsdelivr.net/npm/react-dom@18.2.0/umd/react-dom.production.min.js',
-    'https://cdn.jsdelivr.net/npm/heic2any@0.0.4/dist/heic2any.min.js'
-    // Removed transformers.js from cache to avoid non-module execution
+    './transformers.min.js',
+    'https://cdn.jsdelivr.net/npm/react@18.2.0/umd/react.production.min.js?t=' + new Date().getTime(),
+    'https://cdn.jsdelivr.net/npm/react-dom@18.2.0/umd/react-dom.production.min.js?t=' + new Date().getTime(),
+    'https://cdn.jsdelivr.net/npm/heic2any@0.0.4/dist/heic2any.min.js?t=' + new Date().getTime()
 ];
 
 self.addEventListener('install', event => {
@@ -21,7 +21,7 @@ self.addEventListener('install', event => {
 });
 
 self.addEventListener('fetch', event => {
-    // Bypass caching for transformers.js to ensure module context
+    // Bypass caching for transformers.min.js to ensure module context
     if (event.request.url.includes('transformers.min.js')) {
         event.respondWith(fetch(event.request));
         return;
